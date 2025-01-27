@@ -1,11 +1,72 @@
 // App.js
 import { useState, useEffect } from 'react';
-import styled from 'styled-components';
+import styled, { createGlobalStyle } from 'styled-components';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { FiDollarSign, FiUsers, FiShoppingCart, FiTrendingUp } from 'react-icons/fi';
+import { 
+  FiDollarSign, 
+  FiUsers, 
+  FiShoppingCart, 
+  FiTrendingUp,
+  FiChevronUp,
+  FiChevronDown
+} from 'react-icons/fi';
 import { MdOutlineDashboard, MdPeopleAlt } from 'react-icons/md';
 
+// Global Styles
+const GlobalStyle = createGlobalStyle`
+  body {
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: 'Inter', sans-serif;
+  }
+
+  ::selection {
+    background: #e0f2fe;
+    color: #0369a1;
+  }
+`;
+
 // Styled Components
+const ModernText = styled.div`
+  color: ${props => props.color || '#1a1a1a'};
+  line-height: 1.6;
+  margin: ${props => props.margin || '0'};
+
+  ${props => props.variant === 'title' && `
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+  `}
+
+  ${props => props.variant === 'heading' && `
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  `}
+
+  ${props => props.variant === 'subheading' && `
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  `}
+
+  ${props => props.variant === 'body' && `
+    font-size: 1rem;
+    font-weight: 400;
+    color: #475569;
+  `}
+
+  ${props => props.variant === 'metric' && `
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: #0f172a;
+  `}
+`;
+
 const DashboardContainer = styled.div`
   display: flex;
   min-height: 100vh;
@@ -19,6 +80,26 @@ const Sidebar = styled.div`
   box-shadow: 4px 0 6px rgba(0,0,0,0.1);
   position: fixed;
   height: 100%;
+`;
+
+const SidebarItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+  border-radius: 8px;
+  color: #4a5568;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #f1f5f9;
+  }
+
+  svg {
+    font-size: 1.25rem;
+  }
 `;
 
 const MainContent = styled.div`
@@ -41,34 +122,19 @@ const MetricCard = styled.div`
   box-shadow: 0 4px 6px rgba(0,0,0,0.05);
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
 
   svg {
     font-size: 2rem;
-    color: ${props => props.color || '#4a5568'};
-    padding: 0.5rem;
-    background: ${props => props.bg || '#f7fafc'};
+    padding: 0.75rem;
     border-radius: 8px;
-  }
-`;
-
-const MetricText = styled.div`
-  h3 {
-    margin: 0;
-    font-size: 1rem;
-    color: #718096;
-  }
-  
-  p {
-    margin: 0.25rem 0 0;
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #2d3748;
-  }
-
-  span {
-    font-size: 0.875rem;
-    color: ${props => props.trend > 0 ? '#48bb78' : '#f56565'};
+    background: ${props => props.bg || '#f1f5f9'};
+    color: ${props => props.color || '#3b82f6'};
   }
 `;
 
@@ -78,34 +144,39 @@ const ChartCard = styled.div`
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0,0,0,0.05);
   margin-bottom: 2rem;
-
-  h2 {
-    margin: 0 0 2rem;
-    color: #2d3748;
-  }
 `;
 
-const SidebarItem = styled.div`
+const TrendIndicator = styled.span`
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
-  margin: 0.5rem 0;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: ${props => props.trend > 0 ? '#10b981' : '#ef4444'};
+`;
+
+const CustomTooltip = styled.div`
+  background: white;
+  padding: 1rem;
   border-radius: 8px;
-  color: #4a5568;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    background: #edf2f7;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  
+  .label {
+    ${ModernText} {
+      variant: subheading;
+      margin-bottom: 0.25rem;
+    }
   }
-
-  svg {
-    font-size: 1.25rem;
+  
+  .value {
+    ${ModernText} {
+      variant: metric;
+      font-size: 1.25rem;
+    }
   }
 `;
 
-// Dummy data and metrics calculation
+// Dummy data generator
 const generateData = () => ({
   totalSales: 53000,
   totalUsers: 2300,
@@ -125,117 +196,121 @@ function App() {
     fetch('https://tasteapi.onrender.com/products/')
       .then(res => res.json())
       .then(data => {
-        // Process your actual API data here
+        // Process API data here
       })
-      .catch(() => {
-        // Use dummy data if API fails
-        setMetrics(generateData());
-      });
+      .catch(() => setMetrics(generateData()));
   }, []);
 
   return (
-    <DashboardContainer>
-      <Sidebar>
-        <h2 style={{ margin: '0 0 2rem' }}>Sales Dashboard</h2>
-        
-        <SidebarItem><MdOutlineDashboard /> Dashboard</SidebarItem>
-        <SidebarItem><FiShoppingCart /> Sales</SidebarItem>
-        <SidebarItem><MdPeopleAlt /> Customers</SidebarItem>
-        <SidebarItem><FiUsers /> Users</SidebarItem>
+    <>
+      <GlobalStyle />
+      <DashboardContainer>
+        <Sidebar>
+          <ModernText variant="title" style={{ 
+            background: 'linear-gradient(45deg, #6366f1, #3b82f6)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            marginBottom: '2rem'
+          }}>
+            Sales Dashboard
+          </ModernText>
+          
+          <SidebarItem><MdOutlineDashboard /> Dashboard</SidebarItem>
+          <SidebarItem><FiShoppingCart /> Sales</SidebarItem>
+          <SidebarItem><MdPeopleAlt /> Customers</SidebarItem>
+          <SidebarItem><FiUsers /> Users</SidebarItem>
 
-        <div style={{ marginTop: '2rem' }}>
-          <h3 style={{ color: '#718096' }}>ACCOUNT</h3>
-          <SidebarItem>Profile</SidebarItem>
-          <SidebarItem>Sign Out</SidebarItem>
-        </div>
-      </Sidebar>
-
-      <MainContent>
-        <MetricGrid>
-          <MetricCard>
-            <FiDollarSign color="#48bb78" bg="#f0fff4" />
-            <MetricText>
-              <h3>Today's Money</h3>
-              <p>${metrics.totalSales?.toLocaleString()}</p>
-              <span trend={metrics.salesTrend}>+{metrics.salesTrend}%</span>
-            </MetricText>
-          </MetricCard>
-
-          <MetricCard>
-            <FiUsers color="#4299e1" bg="#ebf8ff" />
-            <MetricText>
-              <h3>Today's Users</h3>
-              <p>{metrics.totalUsers?.toLocaleString()}</p>
-              <span trend={3}>+3%</span>
-            </MetricText>
-          </MetricCard>
-
-          <MetricCard>
-            <MdPeopleAlt color="#9f7aea" bg="#faf5ff" />
-            <MetricText>
-              <h3>New Clients</h3>
-              <p>+{metrics.newClients?.toLocaleString()}</p>
-              <span trend={-2}>-2%</span>
-            </MetricText>
-          </MetricCard>
-
-          <MetricCard>
-            <FiTrendingUp color="#ed64a6" bg="#fff5f7" />
-            <MetricText>
-              <h3>Total Sales</h3>
-              <p>${(metrics.totalSales * 2)?.toLocaleString()}</p>
-              <span trend={5}>+5%</span>
-            </MetricText>
-          </MetricCard>
-        </MetricGrid>
-
-        <ChartCard>
-          <h2>Sales Overview</h2>
-          <div style={{ height: '400px' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={metrics.salesData}>
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Line 
-                  type="monotone" 
-                  dataKey="sales" 
-                  stroke="#4299e1" 
-                  strokeWidth={2}
-                  dot={{ fill: '#4299e1' }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+          <div style={{ marginTop: '2rem' }}>
+            <ModernText variant="subheading" style={{ marginBottom: '1rem' }}>ACCOUNT</ModernText>
+            <SidebarItem>Profile</SidebarItem>
+            <SidebarItem>Sign Out</SidebarItem>
           </div>
-        </ChartCard>
+        </Sidebar>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '2rem' }}>
+        <MainContent>
+          <MetricGrid>
+            <MetricCard bg="#f0fdf4" color="#22c55e">
+              <FiDollarSign />
+              <div>
+                <ModernText variant="subheading">Today's Money</ModernText>
+                <ModernText variant="metric">${metrics.totalSales?.toLocaleString()}</ModernText>
+                <TrendIndicator trend={metrics.salesTrend}>
+                  {metrics.salesTrend > 0 ? <FiChevronUp /> : <FiChevronDown />}
+                  {metrics.salesTrend}%
+                </TrendIndicator>
+              </div>
+            </MetricCard>
+
+            <MetricCard bg="#eff6ff" color="#3b82f6">
+              <FiUsers />
+              <div>
+                <ModernText variant="subheading">Today's Users</ModernText>
+                <ModernText variant="metric">{metrics.totalUsers?.toLocaleString()}</ModernText>
+                <TrendIndicator trend={3}>
+                  <FiChevronUp />
+                  3%
+                </TrendIndicator>
+              </div>
+            </MetricCard>
+
+            <MetricCard bg="#f5f3ff" color="#8b5cf6">
+              <MdPeopleAlt />
+              <div>
+                <ModernText variant="subheading">New Clients</ModernText>
+                <ModernText variant="metric">+{metrics.newClients?.toLocaleString()}</ModernText>
+                <TrendIndicator trend={-2}>
+                  <FiChevronDown />
+                  2%
+                </TrendIndicator>
+              </div>
+            </MetricCard>
+
+            <MetricCard bg="#fce7f3" color="#ec4899">
+              <FiTrendingUp />
+              <div>
+                <ModernText variant="subheading">Total Sales</ModernText>
+                <ModernText variant="metric">${(metrics.totalSales * 2)?.toLocaleString()}</ModernText>
+                <TrendIndicator trend={5}>
+                  <FiChevronUp />
+                  5%
+                </TrendIndicator>
+              </div>
+            </MetricCard>
+          </MetricGrid>
+
           <ChartCard>
-            <h2>Active Users</h2>
-            <div style={{ height: '200px' }}>
-              {/* Add your users chart here */}
+            <ModernText variant="heading" margin="0 0 2rem">Sales Overview</ModernText>
+            <div style={{ height: '400px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={metrics.salesData}>
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip 
+                    content={({ active, payload }) => active && payload && (
+                      <CustomTooltip>
+                        <div className="label">
+                          <ModernText variant="subheading">{payload[0].payload.month}</ModernText>
+                        </div>
+                        <div className="value">
+                          <ModernText>${payload[0].value.toLocaleString()}</ModernText>
+                        </div>
+                      </CustomTooltip>
+                    )}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="sales" 
+                    stroke="#3b82f6" 
+                    strokeWidth={2}
+                    dot={{ fill: '#3b82f6' }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </ChartCard>
-
-          <div style={{ background: 'white', padding: '2rem', borderRadius: '12px' }}>
-            <h3 style={{ marginTop: 0 }}>Sales Documentation</h3>
-            <p style={{ color: '#718096' }}>
-              From product details to sales strategies, find all documentation related to our sales process.
-            </p>
-            <button style={{
-              background: '#4299e1',
-              color: 'white',
-              border: 'none',
-              padding: '0.75rem 1.5rem',
-              borderRadius: '8px',
-              cursor: 'pointer'
-            }}>
-              Read More
-            </button>
-          </div>
-        </div>
-      </MainContent>
-    </DashboardContainer>
+        </MainContent>
+      </DashboardContainer>
+    </>
   );
 }
 
