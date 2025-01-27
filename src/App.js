@@ -1,4 +1,3 @@
-// App.js
 import { useState, useEffect } from 'react';
 import styled, { createGlobalStyle } from 'styled-components';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -8,7 +7,8 @@ import {
   FiShoppingCart, 
   FiTrendingUp,
   FiChevronUp,
-  FiChevronDown
+  FiChevronDown,
+  FiAlertCircle
 } from 'react-icons/fi';
 import { MdOutlineDashboard, MdPeopleAlt } from 'react-icons/md';
 
@@ -143,7 +143,6 @@ const ChartCard = styled.div`
   padding: 2rem;
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-  margin-bottom: 2rem;
 `;
 
 const TrendIndicator = styled.span`
@@ -155,25 +154,34 @@ const TrendIndicator = styled.span`
   color: ${props => props.trend > 0 ? '#10b981' : '#ef4444'};
 `;
 
-const CustomTooltip = styled.div`
+const StatsPanel = styled.div`
   background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+`;
+
+const MetricRow = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+`;
+
+const MetricItem = styled.div`
+  text-align: center;
   padding: 1rem;
+  background: ${props => props.background || '#f8fafc'};
   border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  
-  .label {
-    ${ModernText} {
-      variant: subheading;
-      margin-bottom: 0.25rem;
-    }
-  }
-  
-  .value {
-    ${ModernText} {
-      variant: metric;
-      font-size: 1.25rem;
-    }
-  }
+`;
+
+const StatusBar = styled.div`
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+  border-radius: 2px;
+  margin-top: 1rem;
 `;
 
 // Dummy data generator
@@ -186,7 +194,11 @@ const generateData = () => ({
   salesData: Array.from({ length: 12 }, (_, i) => ({
     month: new Date(0, i).toLocaleString('default', { month: 'short' }),
     sales: Math.floor(Math.random() * 80000 + 20000),
-  }))
+  })),
+  users: 3,
+  clicks: 5,
+  sales: 6,
+  items: 43
 });
 
 function App() {
@@ -278,36 +290,83 @@ function App() {
             </MetricCard>
           </MetricGrid>
 
-          <ChartCard>
-            <ModernText variant="heading" margin="0 0 2rem">Sales Overview</ModernText>
-            <div style={{ height: '400px' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={metrics.salesData}>
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip 
-                    content={({ active, payload }) => active && payload && (
-                      <CustomTooltip>
-                        <div className="label">
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+            <ChartCard>
+              <ModernText variant="heading" margin="0 0 2rem">Sales Overview</ModernText>
+              <div style={{ height: '400px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={metrics.salesData}>
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip 
+                      content={({ active, payload }) => active && payload && (
+                        <div style={{ 
+                          background: 'white', 
+                          padding: '1rem', 
+                          borderRadius: '8px', 
+                          boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
+                        }}>
                           <ModernText variant="subheading">{payload[0].payload.month}</ModernText>
+                          <ModernText variant="metric" style={{ fontSize: '1.5rem' }}>
+                            ${payload[0].value.toLocaleString()}
+                          </ModernText>
                         </div>
-                        <div className="value">
-                          <ModernText>${payload[0].value.toLocaleString()}</ModernText>
-                        </div>
-                      </CustomTooltip>
-                    )}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="sales" 
-                    stroke="#3b82f6" 
-                    strokeWidth={2}
-                    dot={{ fill: '#3b82f6' }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </ChartCard>
+                      )}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="sales" 
+                      stroke="#3b82f6" 
+                      strokeWidth={2}
+                      dot={{ fill: '#3b82f6' }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </ChartCard>
+
+            <StatsPanel>
+              <div>
+                <ModernText variant="subheading" style={{ marginBottom: '0.5rem' }}>
+                  Active Users
+                  <span style={{ color: '#10b981', marginLeft: '0.5rem' }}>(+23%)</span>
+                </ModernText>
+                <ModernText variant="metric" style={{ fontSize: '2.5rem' }}>36K</ModernText>
+                <StatusBar />
+              </div>
+
+              <div>
+                <ModernText variant="subheading" style={{ marginBottom: '1rem' }}>
+                  Performance Metrics
+                </ModernText>
+                <MetricRow>
+                  <MetricItem background="#f0fdf4">
+                    <ModernText variant="subheading">Users</ModernText>
+                    <ModernText variant="metric" style={{ fontSize: '1.5rem' }}>3</ModernText>
+                  </MetricItem>
+                  <MetricItem background="#f0fdfa">
+                    <ModernText variant="subheading">Clicks</ModernText>
+                    <ModernText variant="metric" style={{ fontSize: '1.5rem' }}>5</ModernText>
+                  </MetricItem>
+                  <MetricItem background="#f5f3ff">
+                    <ModernText variant="subheading">Sales</ModernText>
+                    <ModernText variant="metric" style={{ fontSize: '1.5rem' }}>6</ModernText>
+                  </MetricItem>
+                  <MetricItem background="#fce7f3">
+                    <ModernText variant="subheading">Items</ModernText>
+                    <ModernText variant="metric" style={{ fontSize: '1.5rem' }}>43</ModernText>
+                  </MetricItem>
+                </MetricRow>
+              </div>
+
+              <div style={{ marginTop: 'auto' }}>
+                <ModernText variant="body" style={{ color: '#64748b' }}>
+                  <FiAlertCircle style={{ marginRight: '0.5rem' }} />
+                  Updated 2 hours ago
+                </ModernText>
+              </div>
+            </StatsPanel>
+          </div>
         </MainContent>
       </DashboardContainer>
     </>
