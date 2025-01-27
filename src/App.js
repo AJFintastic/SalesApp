@@ -1,19 +1,35 @@
 // App.js
 import { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { FiDollarSign, FiShoppingBag, FiBox, FiTrendingUp } from 'react-icons/fi';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { FiDollarSign, FiUsers, FiShoppingCart, FiTrendingUp } from 'react-icons/fi';
+import { MdOutlineDashboard, MdPeopleAlt } from 'react-icons/md';
 
-// Styled components
+// Styled Components
 const DashboardContainer = styled.div`
-  padding: 2rem;
-  background-color: #f5f6fa;
+  display: flex;
   min-height: 100vh;
+  background-color: #f8f9fa;
 `;
 
-const MetricsGrid = styled.div`
+const Sidebar = styled.div`
+  width: 240px;
+  background: white;
+  padding: 1.5rem;
+  box-shadow: 4px 0 6px rgba(0,0,0,0.1);
+  position: fixed;
+  height: 100%;
+`;
+
+const MainContent = styled.div`
+  margin-left: 240px;
+  padding: 2rem;
+  flex: 1;
+`;
+
+const MetricGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 `;
@@ -22,206 +38,203 @@ const MetricCard = styled.div`
   background: white;
   padding: 1.5rem;
   border-radius: 12px;
-  box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
   display: flex;
   align-items: center;
   gap: 1rem;
 
   svg {
-    font-size: 1.8rem;
-    color: ${props => props.color || '#2c3e50'};
+    font-size: 2rem;
+    color: ${props => props.color || '#4a5568'};
+    padding: 0.5rem;
+    background: ${props => props.bg || '#f7fafc'};
+    border-radius: 8px;
   }
 `;
 
 const MetricText = styled.div`
   h3 {
     margin: 0;
-    font-size: 1.2rem;
-    color: #7f8c8d;
+    font-size: 1rem;
+    color: #718096;
   }
   
   p {
-    margin: 0.5rem 0 0;
-    font-size: 1.8rem;
-    font-weight: 600;
-    color: #2c3e50;
+    margin: 0.25rem 0 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2d3748;
+  }
+
+  span {
+    font-size: 0.875rem;
+    color: ${props => props.trend > 0 ? '#48bb78' : '#f56565'};
   }
 `;
 
-const ChartContainer = styled.div`
+const ChartCard = styled.div`
   background: white;
   padding: 2rem;
   border-radius: 12px;
-  box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
   margin-bottom: 2rem;
-`;
 
-const RecentSales = styled.div`
-  background: white;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 15px rgba(0,0,0,0.1);
-`;
-
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-
-  th, td {
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 1px solid #ecf0f1;
-  }
-
-  th {
-    color: #7f8c8d;
-    font-weight: 500;
+  h2 {
+    margin: 0 0 2rem;
+    color: #2d3748;
   }
 `;
 
-const StatusBadge = styled.span`
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-  background: ${props => props.background};
-  color: white;
-  font-size: 0.875rem;
+const SidebarItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+  border-radius: 8px;
+  color: #4a5568;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #edf2f7;
+  }
+
+  svg {
+    font-size: 1.25rem;
+  }
 `;
 
-// Generate dummy data
-const generateDummyData = () => {
-  const products = [];
-  for (let i = 0; i < 50; i++) {
-    products.push({
-      id: i,
-      name: `Product ${i + 1}`,
-      price: Math.floor(Math.random() * 500) + 50,
-      sold: Math.floor(Math.random() * 1000),
-      stock: Math.floor(Math.random() * 500),
-      category: ['Electronics', 'Fashion', 'Home', 'Beauty'][Math.floor(Math.random() * 4)],
-    });
-  }
-  return products;
-};
-
-const calculateMetrics = (products) => {
-  const totalSales = products.reduce((sum, product) => sum + (product.price * product.sold), 0);
-  const averagePrice = products.length > 0 ? totalSales / products.reduce((sum, product) => sum + product.sold, 0) : 0;
-  const monthlySales = Array.from({ length: 12 }, (_, i) => ({
+// Dummy data and metrics calculation
+const generateData = () => ({
+  totalSales: 53000,
+  totalUsers: 2300,
+  newClients: 3462,
+  salesTrend: 5.5,
+  activeUsers: 823,
+  salesData: Array.from({ length: 12 }, (_, i) => ({
     month: new Date(0, i).toLocaleString('default', { month: 'short' }),
-    sales: products.reduce((sum, product) => sum + (product.sold * (Math.random() * 0.5 + 0.5)), 0),
-  }));
-  
-  return {
-    totalSales,
-    averagePrice: averagePrice.toFixed(2),
-    monthlySales,
-    totalItems: products.reduce((sum, product) => sum + product.sold, 0),
-  };
-};
+    sales: Math.floor(Math.random() * 80000 + 20000),
+  }))
+});
 
 function App() {
-  const [products, setProducts] = useState([]);
-  const [metrics, setMetrics] = useState({});
+  const [metrics, setMetrics] = useState(generateData());
 
   useEffect(() => {
     fetch('https://tasteapi.onrender.com/products/')
-      .then((res) => res.json())
-      .then((data) => {
-        setProducts(data);
-        setMetrics(calculateMetrics(data));
+      .then(res => res.json())
+      .then(data => {
+        // Process your actual API data here
       })
       .catch(() => {
         // Use dummy data if API fails
-        const dummyProducts = generateDummyData();
-        setProducts(dummyProducts);
-        setMetrics(calculateMetrics(dummyProducts));
+        setMetrics(generateData());
       });
   }, []);
 
   return (
     <DashboardContainer>
-      <MetricsGrid>
-        <MetricCard color="#2ecc71">
-          <FiDollarSign />
-          <MetricText>
-            <h3>Total Sales</h3>
-            <p>${metrics.totalSales?.toLocaleString()}</p>
-          </MetricText>
-        </MetricCard>
+      <Sidebar>
+        <h2 style={{ margin: '0 0 2rem' }}>Sales Dashboard</h2>
+        
+        <SidebarItem><MdOutlineDashboard /> Dashboard</SidebarItem>
+        <SidebarItem><FiShoppingCart /> Sales</SidebarItem>
+        <SidebarItem><MdPeopleAlt /> Customers</SidebarItem>
+        <SidebarItem><FiUsers /> Users</SidebarItem>
 
-        <MetricCard color="#3498db">
-          <FiShoppingBag />
-          <MetricText>
-            <h3>Total Items Sold</h3>
-            <p>{metrics.totalItems?.toLocaleString()}</p>
-          </MetricText>
-        </MetricCard>
-
-        <MetricCard color="#9b59b6">
-          <FiBox />
-          <MetricText>
-            <h3>Average Price</h3>
-            <p>${metrics.averagePrice}</p>
-          </MetricText>
-        </MetricCard>
-
-        <MetricCard color="#e67e22">
-          <FiTrendingUp />
-          <MetricText>
-            <h3>Monthly Growth</h3>
-            <p>+{(Math.random() * 15 + 5).toFixed(1)}%</p>
-          </MetricText>
-        </MetricCard>
-      </MetricsGrid>
-
-      <ChartContainer>
-        <h2>Sales Overview</h2>
-        <div style={{ height: '400px' }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={metrics.monthlySales}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Line 
-                type="monotone" 
-                dataKey="sales" 
-                stroke="#3498db" 
-                strokeWidth={2}
-                dot={{ fill: '#3498db' }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+        <div style={{ marginTop: '2rem' }}>
+          <h3 style={{ color: '#718096' }}>ACCOUNT</h3>
+          <SidebarItem>Profile</SidebarItem>
+          <SidebarItem>Sign Out</SidebarItem>
         </div>
-      </ChartContainer>
+      </Sidebar>
 
-      <RecentSales>
-        <h2>Recent Sales</h2>
-        <Table>
-          <thead>
-            <tr>
-              <th>Product</th>
-              <th>Date</th>
-              <th>Amount</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.slice(0, 5).map(product => (
-              <tr key={product.id}>
-                <td>{product.name}</td>
-                <td>{new Date().toLocaleDateString()}</td>
-                <td>${(product.price * product.sold).toLocaleString()}</td>
-                <td>
-                  <StatusBadge background={product.stock > 0 ? '#2ecc71' : '#e74c3c'}>
-                    {product.stock > 0 ? 'Completed' : 'Out of Stock'}
-                  </StatusBadge>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      </RecentSales>
+      <MainContent>
+        <MetricGrid>
+          <MetricCard>
+            <FiDollarSign color="#48bb78" bg="#f0fff4" />
+            <MetricText>
+              <h3>Today's Money</h3>
+              <p>${metrics.totalSales?.toLocaleString()}</p>
+              <span trend={metrics.salesTrend}>+{metrics.salesTrend}%</span>
+            </MetricText>
+          </MetricCard>
+
+          <MetricCard>
+            <FiUsers color="#4299e1" bg="#ebf8ff" />
+            <MetricText>
+              <h3>Today's Users</h3>
+              <p>{metrics.totalUsers?.toLocaleString()}</p>
+              <span trend={3}>+3%</span>
+            </MetricText>
+          </MetricCard>
+
+          <MetricCard>
+            <MdPeopleAlt color="#9f7aea" bg="#faf5ff" />
+            <MetricText>
+              <h3>New Clients</h3>
+              <p>+{metrics.newClients?.toLocaleString()}</p>
+              <span trend={-2}>-2%</span>
+            </MetricText>
+          </MetricCard>
+
+          <MetricCard>
+            <FiTrendingUp color="#ed64a6" bg="#fff5f7" />
+            <MetricText>
+              <h3>Total Sales</h3>
+              <p>${(metrics.totalSales * 2)?.toLocaleString()}</p>
+              <span trend={5}>+5%</span>
+            </MetricText>
+          </MetricCard>
+        </MetricGrid>
+
+        <ChartCard>
+          <h2>Sales Overview</h2>
+          <div style={{ height: '400px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={metrics.salesData}>
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Line 
+                  type="monotone" 
+                  dataKey="sales" 
+                  stroke="#4299e1" 
+                  strokeWidth={2}
+                  dot={{ fill: '#4299e1' }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </ChartCard>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '2rem' }}>
+          <ChartCard>
+            <h2>Active Users</h2>
+            <div style={{ height: '200px' }}>
+              {/* Add your users chart here */}
+            </div>
+          </ChartCard>
+
+          <div style={{ background: 'white', padding: '2rem', borderRadius: '12px' }}>
+            <h3 style={{ marginTop: 0 }}>Sales Documentation</h3>
+            <p style={{ color: '#718096' }}>
+              From product details to sales strategies, find all documentation related to our sales process.
+            </p>
+            <button style={{
+              background: '#4299e1',
+              color: 'white',
+              border: 'none',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '8px',
+              cursor: 'pointer'
+            }}>
+              Read More
+            </button>
+          </div>
+        </div>
+      </MainContent>
     </DashboardContainer>
   );
 }
