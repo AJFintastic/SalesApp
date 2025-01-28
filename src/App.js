@@ -131,23 +131,22 @@ function Dashboard() {
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        const response = await fetch(
-          "https://tasteapi.onrender.com/transactions/"
-        );
+        const response = await fetch("https://tasteapi.onrender.com/transactions/");
         if (!response.ok) {
           throw new Error("Failed to fetch transactions");
         }
         const data = await response.json();
-        setTransactions(data);
+        setTransactions(data); // Update the state with the fetched transactions
       } catch (err) {
-        setError(err.message);
+        setError(err.message); // Handle errors
       } finally {
-        setIsLoading(false);
+        setIsLoading(false); // Ensure loading state is updated
       }
     };
-
+  
     fetchTransactions();
   }, []);
+
 
   // Aggregate metrics
   const totalSales = transactions.reduce(
