@@ -132,7 +132,7 @@ function Dashboard() {
     const fetchTransactions = async () => {
       try {
         const response = await fetch(
-          "https://your-api-endpoint/transactions"
+          "https://tasteapi.onrender.com/transactions"
         );
         if (!response.ok) {
           throw new Error("Failed to fetch transactions");
