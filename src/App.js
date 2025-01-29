@@ -64,7 +64,7 @@ const DashboardContainer = styled.div`
     - When collapsed, we only show icons; on hover, you can optionally expand or show tooltips.
 */
 const Sidebar = styled.div`
-  width: ${(props) => (props.collapsed ? "70px" : "200px")};
+  width: ${(props) => (props.collapsed ? "50px" : "180px")};
   background: white;
   padding: 1rem;
   box-shadow: 4px 0 6px rgba(0, 0, 0, 0.1);
